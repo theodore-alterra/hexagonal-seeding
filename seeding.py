@@ -7,13 +7,11 @@ def seeding():
 SELECT TABLE_NAME, 
 GROUP_CONCAT(COLUMN_NAME SEPARATOR ', ' ) as  COLUMN_NAME,
     GROUP_CONCAT(dt_type SEPARATOR ', ' ) as DATA_TYPE,
-    GROUP_CONCAT(value SEPARATOR ', ' ) as VALUE,
     GROUP_CONCAT(paramter SEPARATOR ', ' ) as PARAMETERS,
     GROUP_CONCAT(dict_param SEPARATOR ', ' ) as DICT
     from (
         SELECT c.TABLE_NAME as TABLE_NAME,
         COLUMN_NAME,
-        concat("dt.",COLUMN_NAME) as value,
         if(DATA_TYPE in ("bigint","int","double","decimal","float"),'%d',"'%s'") dt_type,
         concat( COLUMN_NAME,": Optional[", if(DATA_TYPE in ("bigint","int","double","decimal","float"),'int','str') ,"]= None") as paramter,
         concat( "'",COLUMN_NAME,"' : ",COLUMN_NAME) as dict_param
@@ -21,7 +19,7 @@ GROUP_CONCAT(COLUMN_NAME SEPARATOR ', ' ) as  COLUMN_NAME,
         inner join information_schema.tables t on (c.TABLE_NAME = t.TABLE_NAME and t.TABLE_TYPE = 'base table')
         WHERE c.TABLE_SCHEMA = 'miliothe' and EXTRA != 'auto_increment'
         GROUP BY c.TABLE_NAME, COLUMN_NAME
-        order by COLUMN_NAME,DATA_TYPE DESC
+        order by paramter ASC
         ) dt
     GROUP BY TABLE_NAME
     
@@ -51,25 +49,6 @@ def urlName(st):
 def name(st):
     return st.title().replace("_"," ")
 
-list1 = []
-list2 = []
-
-for i in myresult:
-    list1.append("""from api.endpoints."""+folderName(i["TABLE_NAME"])+""".controller import router as """+folderName(i["TABLE_NAME"]))
-    list2.append("""api_router.include_router("""+folderName(i["TABLE_NAME"])+""", prefix="/"""+urlName(i["TABLE_NAME"])+"""", tags=[" """+name(i["TABLE_NAME"])+""" "])""")
-    
-f = open("api/api.py", "w")
-f.write("""
-from fastapi import APIRouter
-"""+'''
-'''.join(list1)+"""
-
-api_router = APIRouter()
-
-"""+'''
-'''.join(list2)+"""
-""")
-f.close()
 
 dirr  = os.getcwd()
 for i in myresult:
@@ -256,3 +235,22 @@ async def parameterGet(%s, skip: int = 0, limit: int = 100):
 
 """%(jsonBody(i["PARAMETERS"]),jsonBody(i["PARAMETERS"]),i["PARAMETERS"],i["DICT"],i["PARAMETERS"],i["DICT"]))
   
+list1 = []
+list2 = []
+
+for i in myresult:
+    list1.append("""from api.endpoints."""+folderName(i["TABLE_NAME"])+""".controller import router as """+folderName(i["TABLE_NAME"]))
+    list2.append("""api_router.include_router("""+folderName(i["TABLE_NAME"])+""", prefix="/"""+urlName(i["TABLE_NAME"])+"""", tags=[" """+name(i["TABLE_NAME"])+""" "])""")
+    
+f = open("api/api.py", "w")
+f.write("""
+from fastapi import APIRouter
+"""+'''
+'''.join(list1)+"""
+
+api_router = APIRouter()
+
+"""+'''
+'''.join(list2)+"""
+""")
+f.close()

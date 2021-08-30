@@ -17,7 +17,7 @@ GROUP_CONCAT(COLUMN_NAME SEPARATOR ', ' ) as  COLUMN_NAME,
         concat( "'",COLUMN_NAME,"' : ",COLUMN_NAME) as dict_param
         FROM INFORMATION_SCHEMA.COLUMNS c
         inner join information_schema.tables t on (c.TABLE_NAME = t.TABLE_NAME and t.TABLE_TYPE = 'base table')
-        WHERE c.TABLE_SCHEMA = 'miliothe' and EXTRA != 'auto_increment'
+        WHERE c.TABLE_SCHEMA = '"""+os.getenv("DB_CONNECTION_NAME")+"""' and EXTRA != 'auto_increment'
         GROUP BY c.TABLE_NAME, COLUMN_NAME
         order by paramter ASC
         ) dt
